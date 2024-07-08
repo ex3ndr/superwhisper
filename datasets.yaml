@@ -1,0 +1,17 @@
+datasets:
+
+  # Base datasets
+  - rir-1
+  - lj-speech-1.1
+  - musan
+  - libritts-r
+  - hifi-tts
+
+  # Librilight/libriheavy
+  # - librilight
+  # - librilight@medium
+  # - librilight@large
+  # - libriheavy
+  # - libriheavy-encodec
+  # - libriheavy-encodec@medium
+  # - libriheavy-encodec@large
