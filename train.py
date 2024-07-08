@@ -1,6 +1,6 @@
 import evaluate
 from transformers import WhisperFeatureExtractor, Seq2SeqTrainingArguments, Seq2SeqTrainer, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration
-from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler, create_async_dataset
+from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler, create_async_dataset, load_hifitts_sampler
 
 #
 # Parameters
@@ -45,7 +45,8 @@ def compute_metrics(pred):
 #
 
 print("Loading dataset...")
-clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_small.jsonl.gz")
+# clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_small.jsonl.gz")
+clean_sampler = load_hifitts_sampler("./external_datasets/hifi-tts/9017_manifest_clean_train.json")
 dataset = create_async_dataset(create_whisper_sampler(clean_sampler, processor))
 
 #

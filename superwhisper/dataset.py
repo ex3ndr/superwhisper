@@ -62,6 +62,44 @@ def load_libriheavy_sampler(index):
     
     return sample
 
+def load_hifitts_sampler(index):
+
+    # Load ids
+    rows = []
+    with open(index, "r") as f:
+        for line in f:
+            cut = json.loads(line)
+            rows.append(cut)
+
+    def sample():
+        while True:
+
+            # Pick ID
+            record = random.choice(rows)
+            audio_filepath = record["audio_filepath"]
+            text = record["text_normalized"]
+
+            # Try load
+            try:
+                batch = {}
+
+                # Load audio
+                audio =  load_mono_audio("./external_datasets/hifi-tts/" + audio_filepath, 16000)
+                
+                # Features
+                batch["audio"] = audio
+
+                # Load text
+                batch["text"] = text
+
+                # Return
+                return batch
+            except:
+                print("Invalid file: " + audio_filepath)
+                raise
+    
+    return sample
+
 def create_whisper_sampler(sampler, processor):
     def sample():
         batch = {}
@@ -91,21 +129,3 @@ def create_async_dataset(sampler):
             return iter(self.generate())
     dataset = AsyncDataset(sampler)
     return dataset
-
-def create_async_loader(sampler, num_workers = 1):
-
-    # Dataset
-    class AsyncDataset(torch.utils.data.IterableDataset):
-        def __init__(self, sampler):
-            self.sampler = sampler
-        def generate(self):
-            while True:
-                yield self.sampler()
-        def __iter__(self):
-            return iter(self.generate())
-    dataset = AsyncDataset(sampler)
-
-    # Load loader
-    loader = torch.utils.data.DataLoader(dataset, batch_size = 1, num_workers = num_workers, pin_memory = True, shuffle=False)
-
-    return loader
