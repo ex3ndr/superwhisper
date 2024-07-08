@@ -1,6 +1,6 @@
 import evaluate
 from transformers import WhisperFeatureExtractor, Seq2SeqTrainingArguments, Seq2SeqTrainer, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration
-from superwhisper.dataset import load_clean_sampler, create_async_dataset
+from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler, create_async_dataset
 
 #
 # Parameters
@@ -45,8 +45,8 @@ def compute_metrics(pred):
 #
 
 print("Loading dataset...")
-clean_sampler = load_clean_sampler("./external_datasets/libriheavy/libriheavy_cuts_small.jsonl.gz", processor)
-dataset = create_async_dataset(clean_sampler)
+clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_small.jsonl.gz")
+dataset = create_async_dataset(create_whisper_sampler(clean_sampler, processor))
 
 #
 # Load data collator
@@ -108,7 +108,7 @@ training_args = Seq2SeqTrainingArguments(
     metric_for_best_model="wer",
     greater_is_better=False,
     push_to_hub=False,
-    dataloader_num_workers=64
+    dataloader_num_workers=4
 )
 
 #

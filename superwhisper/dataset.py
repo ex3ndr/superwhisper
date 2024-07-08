@@ -4,8 +4,9 @@ import math
 import random
 import torch
 import torchaudio
+from .audio import load_mono_audio
 
-def load_clean_sampler(index, processor):
+def load_libriheavy_sampler(index):
 
     # Load ids
     rows = []
@@ -40,29 +41,42 @@ def load_clean_sampler(index, processor):
                 batch = {}
 
                 # Load audio
-                audio, sr =  torchaudio.load(audio_file)
-                if audio.shape[0] == 2:
-                    audio = audio.mean(dim=0, keepdim=True)
-                audio.squeeze_(0)
-                print(audio_file, audio.shape)
+                audio =  load_mono_audio(audio_file, 16000)
                 
                 # Trim
-                start_frame = math.floor(start * sr)
-                end_frame = math.floor((start + duration) * sr)
+                start_frame = math.floor(start * 16000)
+                end_frame = math.floor((start + duration) * 16000)
                 audio = audio[start_frame:end_frame]
                 
                 # Features
-                batch["input_features"] = processor.feature_extractor(audio, sampling_rate=sr).input_features[0]
-                batch["input_length"] = len(audio) / sr
+                batch["audio"] = audio
 
                 # Load text
-                batch["labels"] = processor.tokenizer(text).input_ids
+                batch["text"] = text
 
                 # Return
                 return batch
-            except Error:
+            except:
                 print("Invalid file: " + recording_id)
                 raise
+    
+    return sample
+
+def create_whisper_sampler(sampler, processor):
+    def sample():
+        batch = {}
+
+        # Sample
+        source = sampler()
+    
+        # Audio
+        batch["input_features"] = processor.feature_extractor(source["audio"], sampling_rate=16000).input_features[0]
+    
+        # Text
+        batch["labels"] = processor.tokenizer(source["text"]).input_ids
+    
+        # Return
+        return batch
     
     return sample
 
