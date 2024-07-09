@@ -24,6 +24,7 @@ def load_libriheavy_sampler(index):
             text = record["supervisions"][0]["custom"]["texts"][0]
             start = record["start"]
             duration = record["duration"]
+            speaker = record["supervisions"][0]["speaker"]
 
             # Try load
             try:
@@ -54,6 +55,9 @@ def load_libriheavy_sampler(index):
                 # Load text
                 batch["text"] = text
 
+                # Speaker
+                batch["speaker"] = speaker
+
                 # Return
                 return batch
             except:
@@ -62,20 +66,21 @@ def load_libriheavy_sampler(index):
     
     return sample
 
-def load_hifitts_sampler(index):
+def load_hifitts_sampler(indexes):
 
     # Load ids
     rows = []
-    with open(index, "r") as f:
-        for line in f:
-            cut = json.loads(line)
-            rows.append(cut)
+    for index in indexes:
+        with open(index, "r") as f:
+            for line in f:
+                cut = json.loads(line)
+                rows.append((cut, index))
 
     def sample():
         while True:
 
             # Pick ID
-            record = random.choice(rows)
+            (record, speaker) = random.choice(rows)
             audio_filepath = record["audio_filepath"]
             text = record["text_normalized"]
 
@@ -91,6 +96,9 @@ def load_hifitts_sampler(index):
 
                 # Load text
                 batch["text"] = text
+
+                # Speaker
+                batch["speaker"] = speaker
 
                 # Return
                 return batch
@@ -118,7 +126,12 @@ def create_mixing_sampler(sampler):
         # Text
         text_0 = sample_0["text"]
         text_1 = sample_1["text"]
-        batch["text"] = text_0 + " (SWITCH) " + text_1
+
+        # Combine
+        if sample_0["speaker"] == sample_1["speaker"]:
+            batch["text"] = text_0 + " " + text_1
+        else:
+            batch["text"] = text_0 + " SWITCH " + text_1
 
         return batch
     return sample

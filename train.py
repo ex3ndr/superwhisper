@@ -56,8 +56,8 @@ def compute_metrics(pred):
 #
 
 print("Loading dataset...")
-# clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_small.jsonl.gz")
-clean_sampler = load_hifitts_sampler("./external_datasets/hifi-tts/9017_manifest_clean_train.json")
+clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_large.jsonl.gz")
+# clean_sampler = load_hifitts_sampler("./external_datasets/hifi-tts/9017_manifest_clean_train.json")
 mixing_sampler = create_mixing_sampler(clean_sampler)
 dataset = create_async_dataset(create_whisper_sampler(mixing_sampler, processor))
 eval_dataset = create_static_dataset(create_whisper_sampler(clean_sampler, processor), 32)
