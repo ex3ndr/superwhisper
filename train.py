@@ -1,6 +1,17 @@
+#
+# Ignore warnings
+#
+
+import warnings
+warnings.filterwarnings("ignore")
+
+#
+# Imports
+#
+
 import evaluate
 from transformers import WhisperFeatureExtractor, Seq2SeqTrainingArguments, Seq2SeqTrainer, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration
-from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler, create_async_dataset, load_hifitts_sampler
+from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler, create_async_dataset, load_hifitts_sampler, create_mixing_sampler, create_static_dataset
 
 #
 # Parameters
@@ -47,7 +58,9 @@ def compute_metrics(pred):
 print("Loading dataset...")
 # clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_small.jsonl.gz")
 clean_sampler = load_hifitts_sampler("./external_datasets/hifi-tts/9017_manifest_clean_train.json")
-dataset = create_async_dataset(create_whisper_sampler(clean_sampler, processor))
+mixing_sampler = create_mixing_sampler(clean_sampler)
+dataset = create_async_dataset(create_whisper_sampler(mixing_sampler, processor))
+eval_dataset = create_static_dataset(create_whisper_sampler(clean_sampler, processor), 32)
 
 #
 # Load data collator
@@ -101,8 +114,8 @@ training_args = Seq2SeqTrainingArguments(
     per_device_eval_batch_size=8,
     predict_with_generate=True,
     generation_max_length=225,
-    save_steps=1000,
-    eval_steps=1000,
+    save_steps=100,
+    eval_steps=100,
     logging_steps=25,
     report_to=["wandb"],
     load_best_model_at_end=True,
@@ -120,7 +133,7 @@ trainer = Seq2SeqTrainer(
     args=training_args,
     model=model,
     train_dataset=dataset,
-    # eval_dataset=common_voice["test"],
+    eval_dataset=eval_dataset,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
     tokenizer=processor.feature_extractor,

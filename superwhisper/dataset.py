@@ -100,6 +100,29 @@ def load_hifitts_sampler(index):
     
     return sample
 
+def create_mixing_sampler(sampler):
+    def sample():
+
+        # Load base samples
+        sample_0 = sampler()
+        sample_1 = sampler()
+
+        # Combine
+        batch = {}
+
+        # Audio
+        audio_0 = sample_0["audio"]
+        audio_1 = sample_1["audio"]
+        batch["audio"] = torch.cat([audio_0, torch.zeros(random.randint(100, 300)), audio_1], dim=0) # Add pause?
+
+        # Text
+        text_0 = sample_0["text"]
+        text_1 = sample_1["text"]
+        batch["text"] = text_0 + " (SWITCH) " + text_1
+
+        return batch
+    return sample
+
 def create_whisper_sampler(sampler, processor):
     def sample():
         batch = {}
@@ -128,4 +151,25 @@ def create_async_dataset(sampler):
         def __iter__(self):
             return iter(self.generate())
     dataset = AsyncDataset(sampler)
+    return dataset
+
+def create_static_dataset(sampler, count):
+
+    # Sample count times
+    samples = []
+    random.seed(42)
+    for _ in range(count):
+        samples.append(sampler())
+    random.seed(None)
+
+    # Create dataset
+    class StaticDataset(torch.utils.data.Dataset):
+        def __init__(self, samples):
+            self.samples = samples
+        def __len__(self):
+            return len(self.samples)
+        def __getitem__(self, idx):
+            return self.samples[idx]
+
+    dataset = StaticDataset(samples)
     return dataset
