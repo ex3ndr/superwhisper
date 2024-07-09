@@ -34,7 +34,7 @@ def series(effects):
 def permutate(effects):
     return PermutateEffect(effects)
 
-def low_pass(*, low = 2000, high = 11000): # Max is ~11000 for 16kHz
+def low_pass(*, low = 2000, high = 8000): # Max is 1/2 * sample rate
     return effect(lambda:sox(['sinc', '-n', str(random.randint(50, 200)), '-' + str(random.uniform(low, high))]))
 
 def band_pass(*, low = 100, high = 1000, min_width = 2000, max_width = 4000):
