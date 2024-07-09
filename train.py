@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore")
 
 import evaluate
 from transformers import WhisperFeatureExtractor, Seq2SeqTrainingArguments, Seq2SeqTrainer, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration
-from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler, create_async_dataset, load_hifitts_sampler, create_mixing_sampler, create_static_dataset
+from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler, create_async_dataset, load_hifitts_sampler, create_mixing_sampler, create_static_dataset, load_distorted_sampler
 
 #
 # Parameters
@@ -19,7 +19,7 @@ from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler
 
 train_model_name = "openai/whisper-small"
 train_model_language = "en"
-train_run_name = "train-small"
+train_run_name = "train-small-aug"
 
 #
 # Load base model
@@ -56,11 +56,13 @@ def compute_metrics(pred):
 #
 
 print("Loading dataset...")
-clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_large.jsonl.gz")
-# clean_sampler = load_hifitts_sampler("./external_datasets/hifi-tts/9017_manifest_clean_train.json")
+# clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_large.jsonl.gz")
+clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_medium.jsonl.gz")
+# clean_sampler = load_hifitts_sampler(["./external_datasets/hifi-tts/9017_manifest_clean_train.json"])
 mixing_sampler = create_mixing_sampler(clean_sampler)
-dataset = create_async_dataset(create_whisper_sampler(mixing_sampler, processor))
-eval_dataset = create_static_dataset(create_whisper_sampler(clean_sampler, processor), 32)
+distorted_sampler = load_distorted_sampler(mixing_sampler)
+dataset = create_async_dataset(create_whisper_sampler(distorted_sampler, processor))
+eval_dataset = create_static_dataset(create_whisper_sampler(distorted_sampler, processor), 32)
 
 #
 # Load data collator
@@ -101,7 +103,7 @@ data_collator = DataCollatorSpeechSeq2SeqWithPadding(processor=processor)
 #
 
 training_args = Seq2SeqTrainingArguments(
-    output_dir="./output/",
+    output_dir="./output/" + train_run_name + "/",
     run_name=train_run_name,
     per_device_train_batch_size=16,
     gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size

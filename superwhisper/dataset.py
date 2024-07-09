@@ -5,6 +5,7 @@ import random
 import torch
 import torchaudio
 from .audio import load_mono_audio
+from .distorter import create_distorter
 
 def load_libriheavy_sampler(index):
 
@@ -108,6 +109,29 @@ def load_hifitts_sampler(indexes):
     
     return sample
 
+def load_distorted_sampler(sampler):
+
+    # Load RIR files
+    rir_files = []
+    with open('./external_datasets/rir-1/files.txt', 'r') as file:
+        for line in file:
+            rir_files.append("./external_datasets/rir-1/" + line.strip())
+
+    # Load BG files
+    bg_files = []
+    for p in Path("./external_datasets/dns-noise").rglob("*.wav"):
+        bg_files.append(str(p))
+
+    # Create distorter
+    distorter = create_distorter(rir_files, bg_files)
+
+    def sample():
+        batch = sampler()
+        batch["audio"] = distorter(batch["audio"])
+        return batch
+
+    return sample
+
 def create_mixing_sampler(sampler):
     def sample():
 
@@ -131,7 +155,7 @@ def create_mixing_sampler(sampler):
         if sample_0["speaker"] == sample_1["speaker"]:
             batch["text"] = text_0 + " " + text_1
         else:
-            batch["text"] = text_0 + " SWITCH " + text_1
+            batch["text"] = text_0 + " <|startoflm|> " + text_1
 
         return batch
     return sample
