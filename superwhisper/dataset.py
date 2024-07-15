@@ -156,7 +156,7 @@ def create_mixing_sampler(sampler):
         if sample_0["speaker"] == sample_1["speaker"]:
             batch["text"] = text_0 + " " + text_1
         else:
-            batch["text"] = text_0 + " <|startoflm|> " + text_1
+            batch["text"] = text_0 + "<|startoflm|>" + text_1
 
         return batch
     return sample
@@ -172,7 +172,7 @@ def create_whisper_sampler(sampler, processor):
         batch["input_features"] = processor.feature_extractor(source["audio"], sampling_rate=16000).input_features[0]
     
         # Text
-        batch["labels"] = processor.tokenizer(source["text"]).input_ids
+        batch["labels"] = processor.tokenizer(source["text"], add_special_tokens=False).input_ids
     
         # Return
         return batch

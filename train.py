@@ -19,7 +19,7 @@ from superwhisper.dataset import create_whisper_sampler, load_libriheavy_sampler
 
 train_model_name = "openai/whisper-small"
 train_model_language = "en"
-train_run_name = "train-small-aug"
+train_run_name = "train-small-aug-2"
 
 #
 # Load base model
@@ -57,8 +57,8 @@ def compute_metrics(pred):
 
 print("Loading dataset...")
 # clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_large.jsonl.gz")
-# clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_medium.jsonl.gz")
-clean_sampler = load_hifitts_sampler(["./external_datasets/hifi-tts/9017_manifest_clean_train.json"])
+clean_sampler = load_libriheavy_sampler("./external_datasets/libriheavy/libriheavy_cuts_medium.jsonl.gz")
+# clean_sampler = load_hifitts_sampler(["./external_datasets/hifi-tts/9017_manifest_clean_train.json"])
 mixing_sampler = create_mixing_sampler(clean_sampler)
 distorted_sampler = load_distorted_sampler(mixing_sampler)
 dataset = create_async_dataset(create_whisper_sampler(distorted_sampler, processor))
